@@ -1,4 +1,4 @@
-## starbucks drinks menu scrapping
+## Starbucks drinks menu scrapping
 
 ### Environment
 1. Download chromedriver in the root folder. [Download Page Link](https://googlechromelabs.github.io/chrome-for-testing/)
