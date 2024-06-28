@@ -1,8 +1,8 @@
 ## Starbucks drinks menu scrapping
 
 ### Environment
-1. Download chromedriver in the root folder. [Download Page Link](https://googlechromelabs.github.io/chrome-for-testing/)
-2. Fill out your database information in the .env file which is in the root folder.
+1. Download chromedriver and put it in the root folder. [Download Page Link](https://googlechromelabs.github.io/chrome-for-testing/)
+2. Fill out your database information in .env file which is in the root folder.
 ```
 (Example)
 DB_HOST="127.0.0.1"
