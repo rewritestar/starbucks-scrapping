@@ -11,4 +11,5 @@ DB_USER="user"
 DB_PASSWORD="passworkd"
 DB_NAME="starbucks"
 ```
-3. Run main.go ($ go run main.go)
+3.  Create schema where you want to put a drink table. In the above case, it is 'statbucks'.
+4.  Run main.go ($ go run main.go)
