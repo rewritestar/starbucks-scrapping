@@ -2,7 +2,12 @@ package drink
 
 import (
 	"bufio"
+	"database/sql"
 	"encoding/csv"
+	"fmt"
+	"github.com/joho/godotenv"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
 	"log"
 	"os"
 	"strings"
@@ -12,19 +17,20 @@ import (
 	"github.com/fedesog/webdriver"
 )
 
-func Run() {
-	settion, err := setUp()
+func ScrapAndWriteCsv() {
+	// 크롤링 & csv 파일 작성
+	session, err := setUpSession()
 	if err != nil {
 		handleError(err)
 	}
 
-	err = writeCsv(settion)
+	err = writeCsv(session)
 	if err != nil {
 		handleError(err)
 	}
 }
 
-func setUp() (*webdriver.Session, error) {
+func setUpSession() (*webdriver.Session, error) {
 	chromeDriver := webdriver.NewChromeDriver(ChromeDriverPath)
 	err := chromeDriver.Start()
 	if err != nil {
@@ -143,6 +149,113 @@ func retrieveData(session *webdriver.Session) (DrinkList, error) {
 	return drinkList, nil
 }
 
+func WriteDatabase() {
+	// csv 파일을 데이터 베이스에 저장
+	err := writeDatabase()
+	if err != nil {
+		handleError(err)
+	}
+}
+
+func writeDatabase() error {
+	db, gormDB, err := setUpDatabase()
+	if err != nil {
+		return err
+	}
+
+	drinkList, err := readCsv()
+	if err != nil {
+		return err
+	}
+
+	if err = createTable(db); err != nil {
+		return err
+	}
+
+	err = gormDB.Create(drinkList).
+		Error
+
+	if err != nil {
+		return err
+	}
+
+	defer db.Close()
+	return nil
+}
+
+func setUpDatabase() (*sql.DB, *gorm.DB, error) {
+	err := godotenv.Load()
+	if err != nil {
+		return nil, nil, err
+	}
+
+	dbHost := os.Getenv("DB_HOST")
+	dbPort := os.Getenv("DB_PORT")
+	dbUser := os.Getenv("DB_USER")
+	dbPW := os.Getenv("DB_PASSWORD")
+	dbName := os.Getenv("DB_NAME")
+
+	db, err := sql.Open("mysql", fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", dbUser, dbPW, dbHost, dbPort, dbName))
+	if err != nil {
+		return nil, nil, err
+	}
+
+	gormDB, err := gorm.Open(mysql.New(mysql.Config{
+		Conn: db,
+	}), &gorm.Config{})
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return db, gormDB, nil
+}
+
+func readCsv() (DrinkList, error) {
+	file, _ := os.Open(OutputPath)
+
+	r := csv.NewReader(bufio.NewReader(file))
+
+	rows, err := r.ReadAll()
+	if err != nil {
+		return nil, err
+	}
+
+	drinkList := DrinkList{}
+	for _, row := range rows {
+		drink := Drink{}
+		drink.NameKR = row[0]
+		drink.NameEN = row[1]
+		drink.ImgUrl = row[2]
+		drink.Kcal = row[3]
+		drink.SatFat = row[4]
+		drink.Protein = row[5]
+		drink.Fat = row[6]
+		drink.TransFat = row[7]
+		drink.Sodium = row[8]
+		drink.Sugars = row[9]
+		drink.Caffeine = row[10]
+		drink.Cholesterol = row[11]
+		drink.Chabo = row[12]
+		drinkList = append(drinkList, &drink)
+	}
+
+	defer file.Close()
+
+	return drinkList, nil
+}
+
+func createTable(db *sql.DB) error {
+	_, err := db.Exec("DROP TABLE IF EXISTS drinks")
+	if err != nil {
+		return err
+	}
+	_, err = db.Exec("CREATE TABLE drinks (\n    id INT NOT NULL AUTO_INCREMENT,\n    name_kr VARCHAR(255),\n    name_en VARCHAR(500),\n    img_url VARCHAR(500),\n    kcal VARCHAR(100),\n    sat_fat VARCHAR(100),\n    protein VARCHAR(100),\n    fat VARCHAR(100),\n    trans_fat VARCHAR(100),\n    sodium VARCHAR(100),\n    sugars VARCHAR(100),\n    caffeine VARCHAR(100),\n    cholesterol VARCHAR(100),\n    chabo VARCHAR(100),\n    PRIMARY KEY (id)\n)")
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func handleError(err error) {
-	log.Fatal(err)
+	log.Fatalln(err)
 }
