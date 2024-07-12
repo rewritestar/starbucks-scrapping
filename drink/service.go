@@ -10,6 +10,7 @@ import (
 	"gorm.io/gorm"
 	"log"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -90,15 +91,15 @@ func writeCsv(session *webdriver.Session) error {
 	return nil
 }
 
-func retrieveData(session *webdriver.Session) (DrinkList, error) {
-	drinkList := DrinkList{}
+func retrieveData(session *webdriver.Session) (DrinkStringList, error) {
+	drinkList := DrinkStringList{}
 
 	list, err := session.FindElements(webdriver.ClassName, "menuDataSet")
 	if err != nil {
 		return nil, err
 	}
 	for _, item := range list {
-		drink := Drink{}
+		drink := DrinkString{}
 
 		got, err := item.FindElement(webdriver.TagName, "a")
 		if err != nil {
@@ -221,21 +222,27 @@ func readCsv() (DrinkList, error) {
 	}
 
 	drinkList := DrinkList{}
-	for _, row := range rows {
+	for i, row := range rows {
+		if i == 0 {
+			continue
+		}
 		drink := Drink{}
 		drink.NameKR = row[0]
 		drink.NameEN = row[1]
 		drink.ImgUrl = row[2]
-		drink.Kcal = row[3]
-		drink.SatFat = row[4]
-		drink.Protein = row[5]
-		drink.Fat = row[6]
-		drink.TransFat = row[7]
-		drink.Sodium = row[8]
-		drink.Sugars = row[9]
-		drink.Caffeine = row[10]
-		drink.Cholesterol = row[11]
-		drink.Chabo = row[12]
+		drink.Kcal, err = stringToInt64(row[3])
+		drink.SatFat, err = stringToInt64(row[4])
+		drink.Protein, err = stringToInt64(row[5])
+		drink.Fat, err = stringToInt64(row[6])
+		drink.TransFat, err = stringToInt64(row[7])
+		drink.Sodium, err = stringToInt64(row[8])
+		drink.Sugars, err = stringToInt64(row[9])
+		drink.Caffeine, err = stringToInt64(row[10])
+		drink.Cholesterol, err = stringToInt64(row[11])
+		drink.Chabo, err = stringToInt64(row[12])
+		if err != nil {
+			return nil, err
+		}
 		drinkList = append(drinkList, &drink)
 	}
 
@@ -249,7 +256,7 @@ func createTable(db *sql.DB) error {
 	if err != nil {
 		return err
 	}
-	_, err = db.Exec("CREATE TABLE drinks (\n    id INT NOT NULL AUTO_INCREMENT,\n    name_kr VARCHAR(255),\n    name_en VARCHAR(500),\n    img_url VARCHAR(500),\n    kcal VARCHAR(100),\n    sat_fat VARCHAR(100),\n    protein VARCHAR(100),\n    fat VARCHAR(100),\n    trans_fat VARCHAR(100),\n    sodium VARCHAR(100),\n    sugars VARCHAR(100),\n    caffeine VARCHAR(100),\n    cholesterol VARCHAR(100),\n    chabo VARCHAR(100),\n    PRIMARY KEY (id)\n)")
+	_, err = db.Exec("CREATE TABLE drinks (\n    id INT NOT NULL AUTO_INCREMENT,\n    name_kr VARCHAR(255),\n    name_en VARCHAR(500),\n    img_url VARCHAR(500),\n    kcal INT,\n    sat_fat INT,\n    protein INT,\n    fat INT,\n    trans_fat INT,\n    sodium INT,\n    sugars INT,\n    caffeine INT,\n    cholesterol INT,\n    chabo INT,\n    PRIMARY KEY (id)\n)")
 	if err != nil {
 		return err
 	}
@@ -258,4 +265,12 @@ func createTable(db *sql.DB) error {
 
 func handleError(err error) {
 	log.Fatalln(err)
+}
+
+func stringToInt64(str string) (int64, error) {
+	i, err := strconv.ParseInt(str, 10, 64)
+	if err != nil {
+		return 0, err
+	}
+	return i, nil
 }

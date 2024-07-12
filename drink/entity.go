@@ -10,6 +10,24 @@ type Drink struct {
 }
 
 type DrinkNutrient struct {
+	Kcal        int64
+	SatFat      int64
+	Protein     int64
+	Fat         int64
+	TransFat    int64
+	Sodium      int64
+	Sugars      int64
+	Caffeine    int64
+	Cholesterol int64
+	Chabo       int64
+}
+
+type DrinkStringList []*DrinkString
+
+type DrinkString struct {
+	NameKR      string
+	NameEN      string
+	ImgUrl      string
 	Kcal        string
 	SatFat      string
 	Protein     string
