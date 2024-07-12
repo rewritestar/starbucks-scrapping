@@ -7,6 +7,10 @@ type Drink struct {
 	NameEN string
 	ImgUrl string
 	DrinkNutrient
+	Price      int
+	Likes      int64
+	IsExistent bool
+	Cate       uint
 }
 
 type DrinkNutrient struct {
@@ -38,4 +42,5 @@ type DrinkString struct {
 	Caffeine    string
 	Cholesterol string
 	Chabo       string
+	Cate        string
 }

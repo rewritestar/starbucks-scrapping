@@ -10,6 +10,7 @@ import (
 	"gorm.io/gorm"
 	"log"
 	"os"
+	"starbucks/menu/scrapping/data"
 	"strconv"
 	"strings"
 	"time"
@@ -17,6 +18,8 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	"github.com/fedesog/webdriver"
 )
+
+const ETCCategoryID = 10
 
 func ScrapAndWriteCsv() {
 	// 크롤링 & csv 파일 작성
@@ -60,7 +63,7 @@ func writeCsv(session *webdriver.Session) error {
 	}
 
 	w := csv.NewWriter(bufio.NewWriter(file))
-	w.Write([]string{"제품명(한글)", "제품명(영어)", "이미지 URL", "칼로리(kcal)", "포화지방(g)", "단백질(g)", "지방(g)", "트랜스 지방(g)", "나트륨(mg)", "당류(g)", "카페인 함량(mg)", "콜레스테롤(mg)", "탄수화물(g)"})
+	w.Write([]string{"제품명(한글)", "제품명(영어)", "이미지 URL", "칼로리(kcal)", "포화지방(g)", "단백질(g)", "지방(g)", "트랜스 지방(g)", "나트륨(mg)", "당류(g)", "카페인 함량(mg)", "콜레스테롤(mg)", "탄수화물(g)", "카테고리"})
 
 	drinkList, err := retrieveData(session)
 	if err != nil {
@@ -82,6 +85,7 @@ func writeCsv(session *webdriver.Session) error {
 			drink.Caffeine,
 			drink.Cholesterol,
 			drink.Chabo,
+			drink.Cate,
 		})
 	}
 
@@ -142,9 +146,10 @@ func retrieveData(session *webdriver.Session) (DrinkStringList, error) {
 			drink.Caffeine = info.Find(DrinkNutrientClassMap["Caffeine"]).Text()
 			drink.Cholesterol = info.Find(DrinkNutrientClassMap["Cholesterol"]).Text()
 			drink.Chabo = info.Find(DrinkNutrientClassMap["Chabo"]).Text()
-
-			drinkList = append(drinkList, &drink)
 		})
+		drink.Cate = html.Find(".cate").Text()
+		drinkList = append(drinkList, &drink)
+
 		session.Back()
 	}
 	return drinkList, nil
@@ -240,6 +245,10 @@ func readCsv() (DrinkList, error) {
 		drink.Caffeine, err = stringToInt64(row[10])
 		drink.Cholesterol, err = stringToInt64(row[11])
 		drink.Chabo, err = stringToInt64(row[12])
+		drink.Cate = getCategory(row[13])
+		drink.Price = data.InitDrinkData[i-1].Price
+		drink.Likes = data.InitDrinkData[i-1].Likes
+		drink.IsExistent = data.InitDrinkData[i-1].IsExistent
 		if err != nil {
 			return nil, err
 		}
@@ -256,7 +265,7 @@ func createTable(db *sql.DB) error {
 	if err != nil {
 		return err
 	}
-	_, err = db.Exec("CREATE TABLE drinks (\n    id INT NOT NULL AUTO_INCREMENT,\n    name_kr VARCHAR(255),\n    name_en VARCHAR(500),\n    img_url VARCHAR(500),\n    kcal INT,\n    sat_fat INT,\n    protein INT,\n    fat INT,\n    trans_fat INT,\n    sodium INT,\n    sugars INT,\n    caffeine INT,\n    cholesterol INT,\n    chabo INT,\n    PRIMARY KEY (id)\n)")
+	_, err = db.Exec("CREATE TABLE drinks (\n    id INT NOT NULL AUTO_INCREMENT,\n    name_kr VARCHAR(255),\n    name_en VARCHAR(500),\n    img_url VARCHAR(500),\n    kcal INT,\n    sat_fat INT,\n    protein INT,\n    fat INT,\n    trans_fat INT,\n    sodium INT,\n    sugars INT,\n    caffeine INT,\n    cholesterol INT,\n    chabo INT,\n    price INT,\n    likes BIGINT,\n    is_existent BOOLEAN,\n    cate INT,\n    PRIMARY KEY (id)\n)")
 	if err != nil {
 		return err
 	}
@@ -273,4 +282,13 @@ func stringToInt64(str string) (int64, error) {
 		return 0, err
 	}
 	return i, nil
+}
+
+func getCategory(name string) uint {
+	for _, category := range data.DrinkCategories {
+		if category.Name == name {
+			return category.ID
+		}
+	}
+	return ETCCategoryID
 }

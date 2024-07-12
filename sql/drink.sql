@@ -13,5 +13,9 @@ CREATE TABLE drinks (
     caffeine INT,
     cholesterol INT,
     chabo INT,
+    price INT,
+    likes BIGINT,
+    is_existent BOOLEAN,
+    cate INT,
     PRIMARY KEY (id)
 )
