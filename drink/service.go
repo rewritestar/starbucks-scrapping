@@ -245,7 +245,7 @@ func readCsv() (DrinkList, error) {
 		drink.Caffeine, err = stringToInt64(row[10])
 		drink.Cholesterol, err = stringToInt64(row[11])
 		drink.Chabo, err = stringToInt64(row[12])
-		drink.Cate = getCategory(row[13])
+		drink.CategoryID = getCategory(row[13])
 		drink.Price = data.InitDrinkData[i-1].Price
 		drink.Likes = data.InitDrinkData[i-1].Likes
 		drink.IsExistent = data.InitDrinkData[i-1].IsExistent
@@ -265,7 +265,7 @@ func createTable(db *sql.DB) error {
 	if err != nil {
 		return err
 	}
-	_, err = db.Exec("CREATE TABLE drinks (\n    id INT NOT NULL AUTO_INCREMENT,\n    name_kr VARCHAR(255),\n    name_en VARCHAR(500),\n    img_url VARCHAR(500),\n    kcal INT,\n    sat_fat INT,\n    protein INT,\n    fat INT,\n    trans_fat INT,\n    sodium INT,\n    sugars INT,\n    caffeine INT,\n    cholesterol INT,\n    chabo INT,\n    price INT,\n    likes BIGINT,\n    is_existent BOOLEAN,\n    cate INT,\n    PRIMARY KEY (id)\n)")
+	_, err = db.Exec("CREATE TABLE drinks (\n    id INT NOT NULL AUTO_INCREMENT,\n    name_kr VARCHAR(255),\n    name_en VARCHAR(500),\n    img_url VARCHAR(500),\n    kcal INT,\n    sat_fat INT,\n    protein INT,\n    fat INT,\n    trans_fat INT,\n    sodium INT,\n    sugars INT,\n    caffeine INT,\n    cholesterol INT,\n    chabo INT,\n    price INT,\n    likes BIGINT,\n    is_existent BOOLEAN,\n    category_id  BIGINT UNSIGNED,\n    PRIMARY KEY (id)\n)")
 	if err != nil {
 		return err
 	}

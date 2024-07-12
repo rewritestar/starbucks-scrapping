@@ -16,6 +16,6 @@ CREATE TABLE drinks (
     price INT,
     likes BIGINT,
     is_existent BOOLEAN,
-    cate INT,
+    category_id  BIGINT UNSIGNED,
     PRIMARY KEY (id)
 )

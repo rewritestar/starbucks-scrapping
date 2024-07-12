@@ -10,7 +10,7 @@ type Drink struct {
 	Price      int
 	Likes      int64
 	IsExistent bool
-	Cate       uint
+	CategoryID uint
 }
 
 type DrinkNutrient struct {
